@@ -1,9 +1,12 @@
-using UnityEditor.AssetImporters;
-using UnityEngine;
-using System.IO;
 using System;
-using UnityEngine.Rendering;
+using UnityEngine;
+using UnityEditor.AssetImporters;
+using System.IO;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
+using JetBrains.Annotations;
+using Unity.Entities.UniversalDelegates;
 
 [ScriptedImporter(100, "TomBen")]
 public class TomBenImporter : ScriptedImporter
@@ -42,7 +45,10 @@ public class TomBenImporter : ScriptedImporter
 
     ParserState state;
 
-    ParsedBlock[] blocks;
+    List<ParsedBlock> blocks;
+
+    AssetImportContext context;
+
 
     private void ClearBuffer() => charBuffer = "";
 
@@ -73,46 +79,59 @@ public class TomBenImporter : ScriptedImporter
 
     public override void OnImportAsset(AssetImportContext ctx)
     { 
-        while(!ReachedEnd())
-        {
-            fileContent = File.ReadAllText(ctx.assetPath);
-            ChangeState(ParserState.OutsideBlock);
-            while (!BufferHasAny("type", "cluster", "wave"))
-            {
-                NextChar();
-            }
-
-        }
-        
-
-        
-
-
-
-
-        ctx.AddObjectToAsset("TomBenSO", fileObj);
-        ctx.SetMainObject(fileObj);
+        context = ctx;
+        fileContent = File.ReadAllText(context.assetPath);
+        blocks = new List<ParsedBlock>();
+        ChangeState(ParserState.OutsideBlock);
+        WriteState();
     }
 
 
     void WriteState()
     {
-        switch (this.state)
+        while (!ReachedEnd())
         {
-            case ParserState.OutsideBlock:
-                break;
-            case ParserState.BlockHeader:
-                Regex regex = new Regex(@"(type|cluster|wave)");
-                Match match = regex.Match(charBuffer);
-                if(match.Success)
-                {
-                    
-                }
-                break;
-            case ParserState.BlockBody:
-                break;
+
+            switch (this.state)
+            {
+                case ParserState.OutsideBlock:
+                    while (!BufferHas("_Tom"))
+                    {
+                        NextChar();
+                    }
+                    charIndex = 0;
+                    ChangeState(ParserState.BlockHeader);
+                    break;
+                case ParserState.BlockHeader:
+                    Regex headerRegex = new Regex(@"(type|wave|cluster)\\s*-\\s*(\\d+)\\s*(\(([\\w\\s]+)\))?\\s*");
+                    Match headerMatch = headerRegex.Match(charBuffer);
+                    if (headerMatch.Success)
+                    {
+                        ClearBuffer();
+                        while(!BufferHas("_Ben"))
+                        {
+                            NextChar();
+                        }
+
+                        charBuffer = charBuffer[0..^4];
+
+                        ParsedBlock parsedBlock = new ParsedBlock()
+                        {
+                            type = Enum.Parse<BlockType>(headerMatch.Groups[1].Value),
+                            id = int.Parse(headerMatch.Groups[2].Value),
+                            name = headerMatch.Groups[4].Value,
+                            content = charBuffer
+                        };
+                        blocks.Add(parsedBlock);
+                        ClearBuffer();
+
+                    }
+                    break;
+                case ParserState.BlockBody:
+                    break;
+            }
+
         }
-    
     }
 }
 
