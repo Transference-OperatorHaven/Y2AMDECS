@@ -209,21 +209,21 @@ public class TomBenImporter : ScriptedImporter
         switch(blockDataState)
         {
             case BlockDataState.type:
-                string[] contentBlocks = charBuffer.Split("!?");
-                Regex contentRegex = new Regex(@"(health|speed|damage)=>(\\d+)");
+                string[] typeBlock = charBuffer.Split("!?");
+                Regex typeRegex = new Regex(@"(health|speed|damage)=>(\\d+)");
                 float typeHealth = 0;
                 float typeSpeed = 0;
                 float typeDamage = 0;
 
-                for(int i = 0;i<contentBlocks.Length; i++)
+                for(int i = 0;i< typeBlock.Length; i++)
                 {
-                    Match contentMatch = contentRegex.Match(contentBlocks[i]);
-                    if (contentMatch.Success)
+                    Match typeMatch = typeRegex.Match(typeBlock[i]);
+                    if (typeMatch.Success)
                     {
-                        string chunkType = contentMatch.Groups[1].Value;
+                        string chunkType = typeMatch.Groups[1].Value;
                         if(chunkType == "health")
                         {
-                            if (float.TryParse(contentMatch.Groups[2].Value, out float hOut))
+                            if (float.TryParse(typeMatch.Groups[2].Value, out float hOut))
                             {
                                 typeHealth = hOut;
                             }
@@ -231,14 +231,14 @@ public class TomBenImporter : ScriptedImporter
                         }
                         else if (chunkType == "speed")
                         {
-                            if (float.TryParse(contentMatch.Groups[2].Value, out float sOut))
+                            if (float.TryParse(typeMatch.Groups[2].Value, out float sOut))
                             {
                                 typeSpeed = sOut;
                             }
                         }
                         else if(chunkType == "damage")
                         {
-                            if (float.TryParse(contentMatch.Groups[2].Value, out float dOut))
+                            if (float.TryParse(typeMatch.Groups[2].Value, out float dOut))
                             {
                                 typeDamage = dOut;
                             }
@@ -253,7 +253,42 @@ public class TomBenImporter : ScriptedImporter
                         damage = typeDamage is 0 ? null : typeDamage
 
                     };
+                    try
+                    {
+                        typeDictionary.Add(id, type);
+                    }
+                    catch(ArgumentException)
+                    {
+                        type.typeName ??= typeDictionary[id].typeName;
+                        type.health ??= typeDictionary[id].health;
+                        type.speed ??= typeDictionary[id].speed;
+                        type.damage ??= typeDictionary[id].damage;
 
+                        typeDictionary[id] = type;
+                    }
+                }
+
+                ClearBuffer();
+                charIndex = 0;
+                break;
+            case BlockDataState.wave:
+                string[] waveBlock = content.Split("!?");
+                Regex waveRegex = new Regex("([CT])(\\d+)\\<?(\\d+)?\\>?\\[?(\\d+)?\\]?");
+
+                Wave waves = new Wave()
+                {
+                    id = id,
+                    waveName = name,
+                };
+
+                Wave.WaveContent waveContent;
+                for(int i = 0;i<waveBlock.Length -1; i++)
+                {
+                    Match waveMatch = waveRegex.Match(waveBlock[i]);
+                    if(waveMatch.Success)
+                    {
+
+                    }
                 }
 
                 break;
