@@ -4,7 +4,7 @@ using UnityEngine;
 public class TypeSO : ScriptableObject
 {
     public int id;
-    public string name;
+    public string typeName;
     public float health;
     public float speed;
     public float damage;

@@ -85,7 +85,7 @@ public class TomBenImporter : ScriptedImporter
 
     string fileContent;
 
-    int charIndex;
+    int charIndex = 0;
 
     string charBuffer = "";
 
@@ -94,7 +94,7 @@ public class TomBenImporter : ScriptedImporter
     BlockDataState blockDataState;
 
     List<ParsedBlock> blocks;
-
+    
     Dictionary<int, Type> typeDictionary = new Dictionary<int, Type>();
     Dictionary<int, Wave> waveDictionary = new Dictionary<int, Wave>();
     Dictionary<int, Cluster> clusterDictionary = new Dictionary<int, Cluster>();
@@ -139,33 +139,43 @@ public class TomBenImporter : ScriptedImporter
     { 
         context = ctx;
         fileContent = File.ReadAllText(context.assetPath);
+        ChangeState(ParserState.OutsideBlock);
+        
         blocks = new List<ParsedBlock>();
         lTypeSO = new List<ScriptableObject>();
         lWaveSO = new List<ScriptableObject>();
         lClusterSO = new List<ScriptableObject>();
 
-        ChangeState(ParserState.OutsideBlock);
+        tomBenSO = ScriptableObject.CreateInstance<TomBenSO>();
+        context.AddObjectToAsset("TomBenSO", tomBenSO);
+        context.SetMainObject(tomBenSO);
         WriteState();
     }
 
 
     void WriteState()
     {
+        Regex removeEscaped = new Regex(@"(\r\n|\r|\n)");
+        Match escapedMatch = removeEscaped.Match(fileContent);
+        fileContent = fileContent.Replace("\r\n", "");
         while (!ReachedEnd())
         {
 
             switch (this.state)
             {
                 case ParserState.OutsideBlock:
-                    while (!BufferHas("_Tom"))
-                    {
-                        NextChar();
-                    }
                     charIndex = 0;
                     ChangeState(ParserState.BlockHeader);
                     break;
                 case ParserState.BlockHeader:
-                    Regex headerRegex = new Regex(@"(type|wave|cluster)\\s*-\\s*(\\d+)\\s*(\(([\\w\\s]+)\))?\\s*");
+                    while (!BufferHas("_Tom"))
+                    {
+                        NextChar();
+                    }
+
+                    charBuffer = charBuffer[0..^4];
+                    
+                    Regex headerRegex = new Regex(@"(type|wave|cluster)\s*-\s*(\d+)\s*(\(([\w\s]+)\))?\s*");
                     Match headerMatch = headerRegex.Match(charBuffer);
                     if (headerMatch.Success)
                     {
@@ -222,7 +232,7 @@ public class TomBenImporter : ScriptedImporter
         {
             case BlockDataState.type:
                 string[] typeBlock = charBuffer.Split("!?");
-                Regex typeRegex = new Regex(@"(health|speed|damage)=>(\\d+)");
+                Regex typeRegex = new Regex(@"(health|speed|damage)=>(\d+)");
                 float typeHealth = 0;
                 float typeSpeed = 0;
                 float typeDamage = 0;
@@ -285,7 +295,7 @@ public class TomBenImporter : ScriptedImporter
                 break;
             case BlockDataState.wave:
                 string[] waveBlock = content.Split("!?");
-                Regex waveRegex = new Regex("([CT])(\\d+)\\<?(\\d+)?\\>?\\[?(\\d+)?\\]?");
+                Regex waveRegex = new Regex(@"([CT])(\d+)\<?(\d+)?\>?\[?(\d+)?\]?");
 
                 Wave waves = new Wave()
                 {
@@ -300,8 +310,8 @@ public class TomBenImporter : ScriptedImporter
                     Match waveMatch = waveRegex.Match(waveBlock[i]);
                     if (waveMatch.Success)
                     {
-                        if (float.TryParse(waveMatch.Groups[3].Value, out float spOut)) ;
-                        if (int.TryParse(waveMatch.Groups[4].Value, out int popOut)) ;
+                        float.TryParse(waveMatch.Groups[3].Value, out float spOut);
+                        int.TryParse(waveMatch.Groups[4].Value, out int popOut);
                         if (waveMatch.Groups[1].Value == "C")
                         {
                             waveContent = new Wave.WaveContent()
@@ -344,7 +354,7 @@ public class TomBenImporter : ScriptedImporter
                 break;
             case BlockDataState.cluster:
                 string[] clusterBlock = content.Split("!?");
-                Regex clusterRegex = new Regex(@"(\\d+):(\\d+)");
+                Regex clusterRegex = new Regex(@"(\d+):(\d+)");
                 Cluster.ClusterContent clustercontent;
 
                 Cluster cluster = new Cluster()
@@ -388,7 +398,7 @@ public class TomBenImporter : ScriptedImporter
         {
             TypeSO typeSO = ScriptableObject.CreateInstance<TypeSO>();
             typeSO.id = type.id;
-            typeSO.name = type.typeName;
+            typeSO.typeName = type.typeName;
             if (type.health != null) { typeSO.health = (float)type.health; }
             if (type.speed != null) { typeSO.speed = (float) type.speed; }
             if (type.damage != null) { typeSO.damage = (float)type.damage; }
