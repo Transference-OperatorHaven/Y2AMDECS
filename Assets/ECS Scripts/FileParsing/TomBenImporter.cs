@@ -409,7 +409,7 @@ public class TomBenImporter : ScriptedImporter
         foreach(Wave wave in waveDictionary.Values)
         {
             WaveSO waveSO = ScriptableObject.CreateInstance<WaveSO>();
-            waveSO.ID = wave.id;
+            waveSO.id = wave.id;
             waveSO.name = wave.waveName;
             foreach(Wave.WaveContent waveContent in waveDictionary[wave.id].waveContent)
             {

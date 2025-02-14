@@ -12,8 +12,8 @@ public class WaveSO : ScriptableObject
         public float spawnTime;
         public int pop;
     }
-    public int ID;
-    public string Name;
+    public int id;
+    public string name;
 
     public List<WaveContent> waveContent;
 
