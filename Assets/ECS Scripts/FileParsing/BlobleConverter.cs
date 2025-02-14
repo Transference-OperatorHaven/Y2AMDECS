@@ -8,17 +8,17 @@ using UnityEngine;
 
 public class BlobleConverter : MonoBehaviour
 {
-    public struct TypeBlob
+    public struct TypeBlob : IComponentData
     {
         public int id;
-        public string typeName;
+        public BlobString typeName;
         public float health;
         public float speed;
         public float damage;
     }
     public struct WaveBlob
     {
-        public struct WaveContent
+        public struct WaveContent : IComponentData
         {
             public bool isCluster;
             public int id;
@@ -26,11 +26,11 @@ public class BlobleConverter : MonoBehaviour
             public int pop;
         }
         public int ID;
-        public string Name;
+        public BlobString Name;
 
-        public WaveContent[] waveContent;
+        public BlobArray<WaveContent> waveContent;
     }
-    public struct ClusterBlob
+    public struct ClusterBlob : IComponentData
     {
         public struct ClusterContent
         {
@@ -38,8 +38,8 @@ public class BlobleConverter : MonoBehaviour
             public int amount;
         }
         public int id;
-        public string clusterName;
-        public ClusterContent[] clusterContent;
+        public BlobString clusterName;
+        public BlobArray<ClusterContent> clusterContent;
     }
 
     public TypeSO[] lTypeSO;
@@ -63,7 +63,7 @@ public class BlobleConverter : MonoBehaviour
         for(int i = 0; i < lTypeSO.Length; i++)
         {
             lTypeBlob[i].id = lTypeSO[i].id;
-            lTypeBlob[i].typeName = lTypeSO[i].typeName;
+            lTypeBlob[i].typeName = lTypeSO[i].typeName.ConvertTo<BlobString>();
             lTypeBlob[i].health = lTypeSO[i].health;
             lTypeBlob[i].speed = lTypeSO[i].speed;
             lTypeBlob[i].damage = lTypeSO[i].damage;
@@ -77,8 +77,8 @@ public class BlobleConverter : MonoBehaviour
         for (int i = 0; i < lWaveSO.Length; i++)
         {
             lWaveBlob[i].ID = lWaveSO[i].ID;
-            lWaveBlob[i].Name = lWaveSO[i].Name;
-            lWaveBlob[i].waveContent = new WaveBlob.WaveContent[lWaveSO[i].waveContent.Count];
+            lWaveBlob[i].Name = lWaveSO[i].Name.ConvertTo<BlobString>(); ;
+            lWaveBlob[i].waveContent = new BlobArray<WaveBlob.WaveContent>();
             for(int j = 0; j < lWaveSO[i].waveContent.Count; j++)
             {
                 lWaveBlob[i].waveContent[j].isCluster = lWaveSO[i].waveContent[j].isCluster;
@@ -95,8 +95,8 @@ public class BlobleConverter : MonoBehaviour
         for (int i = 0; i < lClusterSO.Length; i++)
         {
             lClusterBlob[i].id = lClusterSO[i].id;
-            lClusterBlob[i].clusterName = lClusterSO[i].clusterName;
-            lClusterBlob[i].clusterContent = new ClusterBlob.ClusterContent[lClusterSO[i].clusterContent.Count];
+            lClusterBlob[i].clusterName = lClusterSO[i].clusterName.ConvertTo<BlobString>();;
+            lClusterBlob[i].clusterContent = new BlobArray<ClusterBlob.ClusterContent>();
             for (int j = 0; j < lClusterSO[i].clusterContent.Count; j++)
             {
                 lClusterBlob[i].clusterContent[j].type = lClusterSO[i].clusterContent[j].type;
