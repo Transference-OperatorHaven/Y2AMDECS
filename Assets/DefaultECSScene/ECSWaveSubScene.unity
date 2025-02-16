@@ -147,7 +147,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ef4db1e16e17f247bd06b2faf43f8b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  currentTypeSO: {fileID: 0}
+  currentWaveSO: {fileID: 0}
+  currentClusterSO: {fileID: 0}
   PrefabToSpawn: {fileID: 384866794387173697, guid: 51c89cdeca1d8d34ba80aa324481a3a7, type: 3}
+  health: 0
+  damage: 0
+  speed: 0
+  amount: 0
   SpawnDelay: 0.5
 --- !u!4 &89344826
 Transform:
@@ -199,9 +206,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MoveSpeed: 5
   MaxHealth: 100
-  Damage: 50
-  AttackRadius: 5
-  AttackDelay: 0.5
+  SelectedWeapon: {fileID: 0}
 --- !u!136 &943362534
 CapsuleCollider:
   m_ObjectHideFlags: 0
